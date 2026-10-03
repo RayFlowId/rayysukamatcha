@@ -200,6 +200,18 @@ footer b{color:#fff}
   .result-inner{align-items:flex-start}
   .thumb{width:85px;height:110px}
 }
+
+.quality-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.quality{
+  display:flex;align-items:center;justify-content:center;
+  min-height:42px;border:1px solid var(--line);border-radius:11px;
+  background:rgba(255,255,255,.055);color:#fff;text-decoration:none;
+  font-size:12px;font-weight:800;transition:.2s
+}
+.quality:hover{transform:translateY(-1px);background:rgba(255,255,255,.10)}
+.quality.hd{background:linear-gradient(100deg,#12baf5,#5969ff);border:0}
+@media(max-width:650px){.quality-grid{grid-template-columns:1fr 1fr}.quality:last-child{grid-column:1/3}}
+
 </style>
 </head>
 
@@ -241,10 +253,15 @@ footer b{color:#fff}
           <img class="thumb" id="thumb" alt="Preview">
           <div style="flex:1">
             <h3 id="title">Video siap diproses</h3>
-            <small>Gunakan tombol di bawah untuk membuka hasil.</small>
+            <small id="qualityInfo">Pilih kualitas download:</small>
+            <div class="quality-grid">
+              <a class="quality hd" id="hdLink" href="#" target="_blank" rel="noopener">⬇ HD</a>
+              <a class="quality" id="sdLink" href="#" target="_blank" rel="noopener">⬇ SD</a>
+              <a class="quality" id="wmLink" href="#" target="_blank" rel="noopener">⬇ Watermark</a>
+            </div>
             <div class="actions">
-              <a class="action primary" id="downloadLink" href="#" target="_blank" rel="noopener">Buka video</a>
-              <button class="action" onclick="copyResult()">Salin link</button>
+              <button class="action" onclick="copyResult()">Salin link HD</button>
+              <button class="action" onclick="downloadOriginal()">Download HD</button>
             </div>
           </div>
         </div>
@@ -354,11 +371,27 @@ async function downloadVideo(){
 
     if(!data) throw new Error('Video tidak ditemukan.');
 
-    const videoUrl=data.hdplay || data.play || data.wmplay;
-    if(!videoUrl) throw new Error('Link video tidak tersedia.');
+    const hdUrl=data.hdplay || data.play;
+    const sdUrl=data.play || data.hdplay;
+    const wmUrl=data.wmplay || data.play;
 
-    title.textContent=data.title || 'Video siap dibuka';
-    downloadLink.href=videoUrl;
+    if(!hdUrl) throw new Error('Link video tidak tersedia.');
+
+    title.textContent=data.title || 'Video siap di-download';
+
+    const hdLink=document.getElementById('hdLink');
+    const sdLink=document.getElementById('sdLink');
+    const wmLink=document.getElementById('wmLink');
+
+    hdLink.href=hdUrl;
+    sdLink.href=sdUrl;
+    wmLink.href=wmUrl;
+
+    // Tetap simpan link HD untuk tombol salin/download.
+    downloadLink.href=hdUrl;
+
+    const qualityInfo=document.getElementById('qualityInfo');
+    qualityInfo.textContent='Pilih kualitas: HD (tanpa watermark jika tersedia), SD, atau Watermark.';
 
     if(data.cover){
       thumb.src=data.cover;
@@ -375,6 +408,26 @@ async function downloadVideo(){
   }finally{
     btn.disabled=false;
   }
+}
+
+async function downloadOriginal(){
+  const link=document.getElementById('hdLink').href;
+  if(!link || link==='#'){
+    toast('Link HD belum tersedia.');
+    return;
+  }
+
+  // Atribut download membantu browser mengunduh bila server mengizinkan.
+  const a=document.createElement('a');
+  a.href=link;
+  a.download='RayySave-HD.mp4';
+  a.target='_blank';
+  a.rel='noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  toast('Download HD dimulai. Jika terbuka di tab baru, tekan tombol download di pemutar.');
 }
 
 async function copyResult(){
