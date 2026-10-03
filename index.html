@@ -388,7 +388,7 @@ async function downloadVideo(){
     wmLink.href=wmUrl;
 
     // Tetap simpan link HD untuk tombol salin/download.
-    downloadLink.href=hdUrl;
+    document.getElementById('hdLink').href=hdUrl;
 
     const qualityInfo=document.getElementById('qualityInfo');
     qualityInfo.textContent='Pilih kualitas: HD (tanpa watermark jika tersedia), SD, atau Watermark.';
@@ -431,7 +431,7 @@ async function downloadOriginal(){
 }
 
 async function copyResult(){
-  const link=downloadLink.href;
+  const link=document.getElementById('hdLink').href;
   if(!link || link==='#'){
     toast('Belum ada link hasil.');
     return;
